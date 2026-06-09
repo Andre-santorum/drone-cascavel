@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Drone Cascavel</title>
+<style>
+:root {
+  --verde: #1e6e3e;
+  --verde-claro: #e8f5ee;
+  --verde-med: #2d9e5f;
+  --amarelo: #f5a623;
+  --amarelo-claro: #fff8ec;
+  --vermelho: #d93025;
+  --vermelho-claro: #fdecea;
+  --azul: #1a73e8;
+  --azul-claro: #e8f0fe;
+  --cinza: #5f6368;
+  --cinza-claro: #f8f9fa;
+  --cinza-borda: #e0e0e0;
+  --texto: #1a1a1a;
+  --texto-sec: #666;
+  --branco: #ffffff;
+  --sombra: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+  --sombra-lg: 0 4px 16px rgba(0,0,0,0.12);
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { font-size: 16px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f0f2f5;
+  color: var(--texto);
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+/* HEADER */
+.header {
+  background: var(--verde);
+  color: white;
+  padding: 16px 20px 14px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.header-title { font-size: 17px; font-weight: 600; letter-spacing: -0.2px; }
+.header-sub { font-size: 12px; opacity: 0.75; margin-top: 1px; }
+.header-btn {
+  background: rgba(255,255,255,0.18);
+  border: none;
+  color: white;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 500;
+}
+/* NAV */
+.nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: white;
+  border-top: 1px solid var(--cinza-borda);
+  display: flex;
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 4px 8px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--cinza);
+  font-size: 10px;
+  gap: 4px;
+  transition: color .15s;
+}
+.nav-item.active { color: var(--verde); }
+.nav-icon { font-size: 22px; line-height: 1; }
+/* SCREENS */
+.screen { display: none; padding: 16px; }
+.screen.active { display: block; }
+/* CARDS */
+.card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--sombra);
+}
+.card-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--cinza);
+  margin-bottom: 12px;
+}
+/* SAUDE FINANCEIRA */
+.saldo-hero {
+  text-align: center;
+  padding: 8px 0 4px;
+}
+.saldo-label { font-size: 13px; color: var(--cinza); margin-bottom: 4px; }
+.saldo-valor {
+  font-size: 42px;
+  font-weight: 700;
+  letter-spacing: -1.5px;
+  line-height: 1;
+}
+.saldo-valor.positivo { color: var(--verde); }
+.saldo-valor.negativo { color: var(--vermelho); }
+.saldo-valor.neutro { color: var(--texto); }
+.saldo-mes { font-size: 13px; color: var(--cinza); margin-top: 4px; }
+/* BARRAS */
+.metric-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.metric-row:last-child { margin-bottom: 0; }
+.metric-icon { font-size: 20px; width: 32px; text-align: center; flex-shrink: 0; }
+.metric-info { flex: 1; min-width: 0; }
+.metric-label { font-size: 13px; color: var(--cinza); }
+.metric-val { font-size: 16px; font-weight: 600; color: var(--texto); }
+.barra-wrap { height: 6px; background: #eee; border-radius: 3px; margin-top: 4px; overflow: hidden; }
+.barra-fill { height: 100%; border-radius: 3px; transition: width .5s ease; }
+/* META */
+.meta-box {
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.meta-box.verde { background: var(--verde-claro); }
+.meta-box.amarelo { background: var(--amarelo-claro); }
+.meta-box.vermelho { background: var(--vermelho-claro); }
+.meta-box.azul { background: var(--azul-claro); }
+.meta-icon { font-size: 24px; flex-shrink: 0; }
+.meta-texto { flex: 1; }
+.meta-titulo { font-size: 13px; font-weight: 600; }
+.meta-titulo.verde { color: var(--verde); }
+.meta-titulo.amarelo { color: #b06000; }
+.meta-titulo.vermelho { color: var(--vermelho); }
+.meta-titulo.azul { color: var(--azul); }
+.meta-desc { font-size: 12px; color: var(--cinza); margin-top: 2px; line-height: 1.4; }
+/* ALERTA JANELA */
+.janela-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.janela-badge.alta { background: var(--verde-claro); color: var(--verde); }
+.janela-badge.media { background: var(--amarelo-claro); color: #856000; }
+.janela-badge.baixa { background: #f0f0f0; color: var(--cinza); }
+.janela-texto { font-size: 13px; color: var(--cinza); line-height: 1.5; }
+/* LANÇAR */
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--cinza); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: .04em; }
+.form-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--cinza-borda);
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  color: var(--texto);
+  background: white;
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+  transition: border-color .15s;
+}
+.form-input:focus { border-color: var(--verde); }
+.form-select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--cinza-borda);
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  color: var(--texto);
+  background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+}
+.form-select:focus { border-color: var(--verde); }
+.tipo-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+.tipo-btn {
+  flex: 1;
+  padding: 12px;
+  border: 1.5px solid var(--cinza-borda);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: white;
+  color: var(--cinza);
+  transition: all .15s;
+  text-align: center;
+}
+.tipo-btn.active-contrato { background: var(--verde-claro); border-color: var(--verde); color: var(--verde); }
+.tipo-btn.active-despesa { background: var(--vermelho-claro); border-color: var(--vermelho); color: var(--vermelho); }
+.btn-primary {
+  width: 100%;
+  padding: 15px;
+  background: var(--verde);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s;
+  margin-top: 4px;
+}
+.btn-primary:active { opacity: 0.85; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+/* LISTA */
+.lista-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--cinza-borda);
+}
+.lista-item:last-child { border-bottom: none; }
+.lista-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.lista-dot.verde { background: var(--verde-claro); }
+.lista-dot.vermelho { background: var(--vermelho-claro); }
+.lista-dot.amarelo { background: var(--amarelo-claro); }
+.lista-info { flex: 1; min-width: 0; }
+.lista-titulo { font-size: 14px; font-weight: 600; color: var(--texto); }
+.lista-sub { font-size: 12px; color: var(--cinza); margin-top: 2px; }
+.lista-valor { font-size: 15px; font-weight: 700; text-align: right; }
+.lista-valor.entrada { color: var(--verde); }
+.lista-valor.saida { color: var(--vermelho); }
+/* STATUS BADGE */
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+.status-pendente { background: var(--amarelo-claro); color: #856000; }
+.status-executado { background: var(--azul-claro); color: var(--azul); }
+.status-recebido { background: var(--verde-claro); color: var(--verde); }
+/* CALENDÁRIO */
+.cal-mes { margin-bottom: 16px; }
+.cal-mes-titulo {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--texto);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cal-culturas { display: flex; flex-wrap: wrap; gap: 6px; }
+.cal-tag {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.cal-tag.alta { background: var(--verde); color: white; }
+.cal-tag.media { background: var(--amarelo-claro); color: #856000; }
+.cal-tag.preparo { background: #f0f0f0; color: var(--cinza); }
+.cal-tag.entressafra { background: #e8eaf6; color: #3949ab; }
+/* SIMULADOR */
+.slider-group { margin-bottom: 16px; }
+.slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.slider-label { font-size: 13px; font-weight: 600; color: var(--cinza); }
+.slider-val { font-size: 15px; font-weight: 700; color: var(--verde); }
+input[type=range] {
+  width: 100%;
+  height: 4px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--cinza-borda);
+  border-radius: 2px;
+  outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  background: var(--verde);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.resultado-sim {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
+.res-card {
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  text-align: center;
+}
+.res-label { font-size: 11px; font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
+.res-val { font-size: 20px; font-weight: 700; }
+/* LOGIN */
+#login-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 32px 24px;
+  text-align: center;
+  background: linear-gradient(160deg, #e8f5ee 0%, #f0f2f5 60%);
+}
+.login-icon { font-size: 64px; margin-bottom: 16px; }
+.login-titulo { font-size: 26px; font-weight: 700; color: var(--verde); margin-bottom: 6px; }
+.login-sub { font-size: 15px; color: var(--cinza); margin-bottom: 32px; line-height: 1.5; max-width: 300px; }
+.login-features {
+  background: white;
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 28px;
+  width: 100%;
+  max-width: 320px;
+  text-align: left;
+  box-shadow: var(--sombra);
+}
+.login-feature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 14px;
+  color: var(--texto);
+  border-bottom: 1px solid var(--cinza-borda);
+}
+.login-feature:last-child { border-bottom: none; }
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 320px;
+  padding: 15px 24px;
+  background: var(--verde);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--sombra-lg);
+  transition: opacity .15s;
+}
+.btn-google:active { opacity: 0.88; }
+.login-note { font-size: 11px; color: var(--cinza); margin-top: 14px; line-height: 1.5; max-width: 280px; }
+/* SETUP */
+#setup-screen {
+  padding: 24px;
+  min-height: 100vh;
+  background: #f0f2f5;
+}
+.setup-title { font-size: 22px; font-weight: 700; color: var(--verde); margin-bottom: 6px; }
+.setup-sub { font-size: 14px; color: var(--cinza); margin-bottom: 24px; line-height: 1.5; }
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #222;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0;
+  transition: all .25s;
+  z-index: 999;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* LOADING */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  color: var(--cinza);
+  font-size: 14px;
+  gap: 10px;
+}
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--cinza-borda);
+  border-top-color: var(--verde);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--cinza);
+}
+.empty-icon { font-size: 40px; margin-bottom: 10px; }
+.empty-text { font-size: 14px; line-height: 1.5; }
+/* SHEET ID FIELD */
+.sheet-hint { font-size: 12px; color: var(--cinza); margin-top: 6px; line-height: 1.5; }
+.link-small { color: var(--azul); text-decoration: none; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-icon">🚁</div>
+  <div class="login-titulo">Drone Cascavel</div>
+  <div class="login-sub">Seu painel financeiro pessoal. Dados salvos no seu Google Sheets, para sempre.</div>
+  <div class="login-features">
+    <div class="login-feature">📊 Saúde financeira em tempo real</div>
+    <div class="login-feature">📋 Controle de contratos e hectares</div>
+    <div class="login-feature">🌱 Calendário agrícola Oeste do PR</div>
+    <div class="login-feature">🎯 Meta: quando superar o CLT</div>
+    <div class="login-feature">💾 Dados salvos no seu Google</div>
+  </div>
+  <button class="btn-google" onclick="iniciarLogin()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+    Entrar com Google
+  </button>
+  <div class="login-note">Seus dados ficam no seu próprio Google Drive. Nenhuma informação vai para terceiros.</div>
+</div>
+
+<!-- SETUP -->
+<div id="setup-screen" style="display:none">
+  <div class="setup-title">Configuração inicial</div>
+  <div class="setup-sub">Precisamos criar sua planilha de dados. Só precisa fazer isso uma vez.</div>
+
+  <div class="card">
+    <div class="card-title">Passo 1 — Crie a planilha</div>
+    <p style="font-size:14px;color:var(--cinza);margin-bottom:12px;line-height:1.6">
+      Acesse o link abaixo, faça uma cópia da planilha modelo para o seu Google Drive e cole o ID aqui.
+    </p>
+    <a href="https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms/copy" target="_blank" style="display:block;background:var(--azul-claro);color:var(--azul);padding:12px 16px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;text-decoration:none;text-align:center;margin-bottom:8px;">
+      📄 Criar minha planilha (Google Drive)
+    </a>
+    <div class="sheet-hint">Abrirá o Google Sheets. Clique em "Fazer uma cópia" e salve no seu Drive.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Passo 2 — Cole o ID da planilha</div>
+    <p style="font-size:14px;color:var(--cinza);margin-bottom:12px;line-height:1.6">
+      Na URL da sua planilha, copie o código entre <code>/d/</code> e <code>/edit</code>
+    </p>
+    <div class="form-group">
+      <label class="form-label">ID da planilha</label>
+      <input class="form-input" id="sheet-id-input" placeholder="Cole aqui o ID da planilha" style="font-size:14px;">
+      <div class="sheet-hint">Exemplo: <code>1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms</code></div>
+    </div>
+    <button class="btn-primary" onclick="salvarSheetId()">Conectar planilha ✓</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Seus dados fixos (edite se mudar)</div>
+    <div class="form-group">
+      <label class="form-label">Salário CLT (R$)</label>
+      <input class="form-input" id="cfg-clt" type="number" value="3747">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Despesas fixas/mês (R$)</label>
+      <input class="form-input" id="cfg-desp" type="number" value="2450">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Preço padrão por hectare (R$)</label>
+      <input class="form-input" id="cfg-ha" type="number" value="55">
+    </div>
+  </div>
+</div>
+
+<!-- APP PRINCIPAL -->
+<div id="app" style="display:none">
+  <div class="header">
+    <div>
+      <div class="header-title" id="header-title">Drone Cascavel</div>
+      <div class="header-sub" id="header-sub">Carregando...</div>
+    </div>
+    <button class="header-btn" onclick="sincronizar()">↻ Sync</button>
+  </div>
+
+  <!-- TELA: INÍCIO -->
+  <div id="screen-inicio" class="screen active">
+    <div id="inicio-content">
+      <div class="loading"><div class="spinner"></div>Carregando dados...</div>
+    </div>
+  </div>
+
+  <!-- TELA: LANÇAR -->
+  <div id="screen-lancar" class="screen">
+    <div class="tipo-toggle">
+      <button class="tipo-btn active-contrato" id="btn-tipo-contrato" onclick="setTipo('contrato')">🚁 Contrato</button>
+      <button class="tipo-btn" id="btn-tipo-despesa" onclick="setTipo('despesa')">💸 Despesa</button>
+    </div>
+
+    <div class="card" id="form-contrato">
+      <div class="card-title">Novo contrato</div>
+      <div class="form-group">
+        <label class="form-label">Nome do cliente / fazenda</label>
+        <input class="form-input" id="f-cliente" placeholder="Ex: João Silva — Fazenda Boa Vista">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Hectares a aplicar</label>
+        <input class="form-input" id="f-ha" type="number" placeholder="Ex: 120" inputmode="numeric">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Valor por hectare (R$)</label>
+        <input class="form-input" id="f-vha" type="number" id="f-preco" inputmode="decimal">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cultura</label>
+        <select class="form-select" id="f-cultura">
+          <option>Soja</option>
+          <option>Milho</option>
+          <option>Trigo</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="f-status">
+          <option value="pendente">🟡 Pendente — ainda não executei</option>
+          <option value="executado">🔵 Executado — aguardando pagamento</option>
+          <option value="recebido">🟢 Recebido — pago</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Data</label>
+        <input class="form-input" id="f-data-contrato" type="date">
+      </div>
+      <div id="contrato-total" style="background:var(--verde-claro);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;display:none">
+        <div style="font-size:12px;color:var(--cinza);">Total do contrato</div>
+        <div style="font-size:24px;font-weight:700;color:var(--verde)" id="contrato-total-val">—</div>
+      </div>
+      <button class="btn-primary" id="btn-salvar-contrato" onclick="salvarContrato()">Salvar contrato</button>
+    </div>
+
+    <div class="card" id="form-despesa" style="display:none">
+      <div class="card-title">Nova despesa</div>
+      <div class="form-group">
+        <label class="form-label">Descrição</label>
+        <input class="form-input" id="f-desc-desp" placeholder="Ex: Bateria drone, combustível...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Valor (R$)</label>
+        <input class="form-input" id="f-val-desp" type="number" inputmode="decimal" placeholder="0,00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Categoria</label>
+        <select class="form-select" id="f-cat-desp">
+          <option>🏠 Aluguel</option>
+          <option>🍽️ Alimentação</option>
+          <option>⛽ Combustível</option>
+          <option>🔋 Bateria/Manutenção drone</option>
+          <option>🚗 Parcela veículo</option>
+          <option>📱 Celular/Internet</option>
+          <option>🏥 Saúde</option>
+          <option>📦 Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Data</label>
+        <input class="form-input" id="f-data-desp" type="date">
+      </div>
+      <button class="btn-primary" id="btn-salvar-desp" onclick="salvarDespesa()">Salvar despesa</button>
+    </div>
+  </div>
+
+  <!-- TELA: CONTRATOS -->
+  <div id="screen-contratos" class="screen">
+    <div class="card" id="resumo-contratos"></div>
+    <div class="card">
+      <div class="card-title">Contratos do mês</div>
+      <div id="lista-contratos"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+
+  <!-- TELA: CALENDÁRIO -->
+  <div id="screen-calendario" class="screen">
+    <div class="card">
+      <div class="card-title">Situação agora — <span id="mes-atual-nome"></span></div>
+      <div id="janela-agora"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Calendário agrícola — Oeste do Paraná</div>
+      <div id="cal-content"></div>
+    </div>
+    <div class="card" style="background:var(--verde-claro);border:none;box-shadow:none">
+      <div style="font-size:13px;color:var(--verde);font-weight:600;margin-bottom:6px;">📌 Dica de prospecção</div>
+      <div style="font-size:13px;color:var(--verde);line-height:1.6" id="dica-prospeccao"></div>
+    </div>
+  </div>
+
+  <!-- TELA: META -->
+  <div id="screen-meta" class="screen">
+    <div class="card" id="meta-status-card"></div>
+    <div class="card">
+      <div class="card-title">Simulador — quanto preciso fazer?</div>
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-label">Preço por hectare</span>
+          <span class="slider-val" id="sim-preco-val">R$ 55</span>
+        </div>
+        <input type="range" min="25" max="120" value="55" step="1" id="sim-preco" oninput="atualizarSim()">
+      </div>
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-label">Hectares por dia</span>
+          <span class="slider-val" id="sim-ha-val">60 ha/dia</span>
+        </div>
+        <input type="range" min="20" max="120" value="60" step="5" id="sim-ha" oninput="atualizarSim()">
+      </div>
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-label">Dias trabalhados/mês</span>
+          <span class="slider-val" id="sim-dias-val">14 dias</span>
+        </div>
+        <input type="range" min="5" max="22" value="14" step="1" id="sim-dias" oninput="atualizarSim()">
+      </div>
+      <div class="resultado-sim" id="sim-resultado"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Payback do drone</div>
+      <div id="payback-info"></div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <button class="nav-item active" onclick="irPara('inicio')" id="nav-inicio">
+      <span class="nav-icon">🏠</span><span>Início</span>
+    </button>
+    <button class="nav-item" onclick="irPara('lancar')" id="nav-lancar">
+      <span class="nav-icon">➕</span><span>Lançar</span>
+    </button>
+    <button class="nav-item" onclick="irPara('contratos')" id="nav-contratos">
+      <span class="nav-icon">📋</span><span>Contratos</span>
+    </button>
+    <button class="nav-item" onclick="irPara('calendario')" id="nav-calendario">
+      <span class="nav-icon">🌱</span><span>Calendário</span>
+    </button>
+    <button class="nav-item" onclick="irPara('meta')" id="nav-meta">
+      <span class="nav-icon">🎯</span><span>Meta</span>
+    </button>
+  </nav>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Google API -->
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
+<script>
+// =============================================
+// CONFIGURAÇÃO
+// =============================================
+const CLIENT_ID = '897912728236-7qpb6l3u5v5l5v5l5v5l5v5l5v5l5v5.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+const DISCOVERY_DOC = 'https://sheets.googleapis.com/$discovery/rest?version=v4';
+
+// Dados do usuário
+let CFG = {
+  clt: 3747,
+  despFixas: 2450,
+  precoHaPadrao: 55,
+  sheetId: null
+};
+
+let TOKEN = null;
+let DADOS = { contratos: [], despesas: [] };
+
+// =============================================
+// CALENDÁRIO AGRÍCOLA — OESTE DO PR
+// =============================================
+const CALENDARIO = [
+  { mes: 0,  nome: 'Janeiro',   soja: 'alta', milhoS: 'plantio', milho1: 'colheita', trigo: 'entressafra', nivel: 'alta' },
+  { mes: 1,  nome: 'Fevereiro', soja: 'alta', milhoS: 'alta',    milho1: 'colheita', trigo: 'entressafra', nivel: 'alta' },
+  { mes: 2,  nome: 'Março',     soja: 'alta', milhoS: 'alta',    milho1: 'colheita', trigo: 'entressafra', nivel: 'alta' },
+  { mes: 3,  nome: 'Abril',     soja: 'media',milhoS: 'alta',    milho1: 'colheita', trigo: 'entressafra', nivel: 'alta' },
+  { mes: 4,  nome: 'Maio',      soja: 'entressafra', milhoS: 'alta', milho1: 'entressafra', trigo: 'plantio', nivel: 'media' },
+  { mes: 5,  nome: 'Junho',     soja: 'entressafra', milhoS: 'alta', milho1: 'entressafra', trigo: 'plantio', nivel: 'media' },
+  { mes: 6,  nome: 'Julho',     soja: 'entressafra', milhoS: 'colheita', milho1: 'entressafra', trigo: 'plantio', nivel: 'baixa' },
+  { mes: 7,  nome: 'Agosto',    soja: 'entressafra', milhoS: 'entressafra', milho1: 'plantio', trigo: 'alta', nivel: 'media' },
+  { mes: 8,  nome: 'Setembro',  soja: 'plantio', milhoS: 'entressafra', milho1: 'plantio', trigo: 'alta', nivel: 'media' },
+  { mes: 9,  nome: 'Outubro',   soja: 'plantio', milhoS: 'entressafra', milho1: 'plantio', trigo: 'alta', nivel: 'media' },
+  { mes: 10, nome: 'Novembro',  soja: 'alta', milhoS: 'entressafra', milho1: 'alta', trigo: 'colheita', nivel: 'alta' },
+  { mes: 11, nome: 'Dezembro',  soja: 'alta', milhoS: 'plantio', milho1: 'alta', trigo: 'entressafra', nivel: 'alta' },
+];
+
+const DICAS = [
+  'Jan: Alta temporada! Priorize contatos com produtores de soja. Ferrugem asiática exige 2–3 aplicações nesta fase.',
+  'Fev: Pico máximo — soja em R1/R3 e milho safrinha começando. Agende todos os contratos possíveis.',
+  'Mar: Ainda alta demanda. Milho safrinha precisa de fungicida e inseticida. Feche contratos para abril.',
+  'Abr: Milho safrinha dominante. Comece a mapear produtores de trigo para agosto/setembro.',
+  'Mai: Use este mês para prospectar. Visite cooperativas, agrônomos e revendas. Feche contratos para a próxima safra.',
+  'Jun: Entressafra de soja. Milho safrinha ainda ativo. Ideal para demonstrações gratuitas e conquistar novos clientes.',
+  'Jul: Mês mais fraco. Foco total em prospecção: liste produtores, visite agrônomos, prepare contratos para agosto.',
+  'Ago: Trigo entra em fase de aplicação. Boa oportunidade para faturar na entressafra da soja.',
+  'Set: Trigo ainda ativo. Produtores de soja começam o plantio — contate-os agora para garantir contratos de novembro.',
+  'Out: Trigo colhendo. Soja em plantio. Este é o momento de confirmar contratos de aplicação para novembro/dezembro.',
+  'Nov: Alta temporada começa! Soja em desenvolvimento vegetativo exige herbicida e primeiro fungicida.',
+  'Dez: Safra plena. Maximize os dias de voo. Janeiro e fevereiro serão seus meses mais rentáveis.',
+];
+
+// =============================================
+// INIT
+// =============================================
+window.onload = function() {
+  carregarConfig();
+  const hoje = new Date();
+  document.querySelectorAll('input[type=date]').forEach(i => i.value = hoje.toISOString().slice(0,10));
+  document.getElementById('f-vha').value = CFG.precoHaPadrao;
+
+  // Atualiza total em tempo real
+  document.getElementById('f-ha').addEventListener('input', calcTotal);
+  document.getElementById('f-vha').addEventListener('input', calcTotal);
+
+  verificarEstado();
+};
+
+function carregarConfig() {
+  const cfg = localStorage.getItem('drone_cfg');
+  if (cfg) CFG = { ...CFG, ...JSON.parse(cfg) };
+  const token = localStorage.getItem('drone_token');
+  if (token) TOKEN = JSON.parse(token);
+}
+
+function salvarConfig() {
+  localStorage.setItem('drone_cfg', JSON.stringify(CFG));
+}
+
+function verificarEstado() {
+  if (!TOKEN || !TOKEN.access_token) { mostrarLogin(); return; }
+  if (!CFG.sheetId) { mostrarSetup(); return; }
+  mostrarApp();
+}
+
+// =============================================
+// LOGIN GOOGLE
+// =============================================
+function iniciarLogin() {
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: (resp) => {
+      if (resp.error) { mostrarToast('Erro no login: ' + resp.error); return; }
+      TOKEN = resp;
+      TOKEN.timestamp = Date.now();
+      localStorage.setItem('drone_token', JSON.stringify(TOKEN));
+      if (!CFG.sheetId) mostrarSetup();
+      else mostrarApp();
+    },
+  });
+  client.requestAccessToken({ prompt: 'consent' });
+}
+
+// =============================================
+// SETUP
+// =============================================
+function mostrarLogin() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'none';
+}
+
+function mostrarSetup() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('setup-screen').style.display = 'block';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('cfg-clt').value = CFG.clt;
+  document.getElementById('cfg-desp').value = CFG.despFixas;
+  document.getElementById('cfg-ha').value = CFG.precoHaPadrao;
+}
+
+function salvarSheetId() {
+  const id = document.getElementById('sheet-id-input').value.trim();
+  if (!id || id.length < 20) { mostrarToast('Cole um ID de planilha válido'); return; }
+  CFG.sheetId = id;
+  CFG.clt = parseFloat(document.getElementById('cfg-clt').value) || 3747;
+  CFG.despFixas = parseFloat(document.getElementById('cfg-desp').value) || 2450;
+  CFG.precoHaPadrao = parseFloat(document.getElementById('cfg-ha').value) || 55;
+  salvarConfig();
+  document.getElementById('f-vha').value = CFG.precoHaPadrao;
+  mostrarToast('Planilha conectada!');
+  setTimeout(mostrarApp, 500);
+}
+
+// =============================================
+// APP
+// =============================================
+function mostrarApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  const agora = new Date();
+  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  document.getElementById('header-sub').textContent = meses[agora.getMonth()] + ' ' + agora.getFullYear();
+
+  renderCalendario();
+  carregarDados();
+  atualizarSim();
+}
+
+// =============================================
+// SHEETS API
+// =============================================
+async function apiGet(range) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${CFG.sheetId}/values/${encodeURIComponent(range)}`;
+  const res = await fetch(url, { headers: { Authorization: 'Bearer ' + TOKEN.access_token } });
+  if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'Erro API'); }
+  return res.json();
+}
+
+async function apiAppend(range, values) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${CFG.sheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + TOKEN.access_token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ values })
+  });
+  if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'Erro ao salvar'); }
+  return res.json();
+}
+
+async function carregarDados() {
+  if (!CFG.sheetId) return;
+  try {
+    const [rContratos, rDespesas] = await Promise.all([
+      apiGet('Contratos!A2:H500').catch(() => ({ values: [] })),
+      apiGet('Despesas!A2:E500').catch(() => ({ values: [] }))
+    ]);
+
+    DADOS.contratos = (rContratos.values || []).map(r => ({
+      data: r[0] || '', cliente: r[1] || '', ha: parseFloat(r[2]) || 0,
+      vha: parseFloat(r[3]) || 0, total: parseFloat(r[4]) || 0,
+      cultura: r[5] || '', status: r[6] || 'pendente', obs: r[7] || ''
+    }));
+
+    DADOS.despesas = (rDespesas.values || []).map(r => ({
+      data: r[0] || '', desc: r[1] || '', valor: parseFloat(r[2]) || 0,
+      categoria: r[3] || '', tipo: r[4] || 'despesa'
+    }));
+
+    renderInicio();
+    renderContratos();
+  } catch(e) {
+    mostrarToast('Erro ao carregar: ' + e.message);
+    renderInicio();
+  }
+}
+
+function sincronizar() {
+  mostrarToast('Sincronizando...');
+  carregarDados();
+}
+
+// =============================================
+// TELA INÍCIO
+// =============================================
+function renderInicio() {
+  const agora = new Date();
+  const mesAtual = agora.getMonth();
+  const anoAtual = agora.getFullYear();
+  const mesStr = `${anoAtual}-${String(mesAtual + 1).padStart(2,'0')}`;
+
+  const contratosM = DADOS.contratos.filter(c => c.data && c.data.startsWith(mesStr));
+  const despesasM = DADOS.despesas.filter(d => d.data && d.data.startsWith(mesStr));
+
+  const recebidoM = contratosM.filter(c => c.status === 'recebido').reduce((s,c) => s + c.total, 0);
+  const executadoM = contratosM.filter(c => c.status === 'executado').reduce((s,c) => s + c.total, 0);
+  const totalContratos = recebidoM + executadoM;
+  const totalDespesas = despesasM.reduce((s,d) => s + d.valor, 0);
+  const despesasFixas = CFG.despFixas;
+  const totalSaidas = totalDespesas + despesasFixas;
+  const saldo = CFG.clt + totalContratos - totalSaidas;
+  const haTotal = contratosM.reduce((s,c) => s + c.ha, 0);
+
+  const cal = CALENDARIO[mesAtual];
+  const nivelLabel = cal.nivel === 'alta' ? '🟢 Alta demanda agora' : cal.nivel === 'media' ? '🟡 Demanda moderada' : '🔵 Entressafra — prospectar';
+
+  let alertas = [];
+  const perc = totalContratos / CFG.clt;
+  if (perc < 0.3) alertas.push({ tipo: 'vermelho', icon: '⚠️', titulo: 'Drone abaixo de 30% do CLT', desc: 'Priorize captação de contratos esta semana.' });
+  else if (perc >= 1) alertas.push({ tipo: 'verde', icon: '🎯', titulo: 'Drone superou o CLT!', desc: `R$ ${fmt(totalContratos)} faturados — continue assim.` });
+  else alertas.push({ tipo: 'amarelo', icon: '📈', titulo: `Drone em ${Math.round(perc*100)}% do CLT`, desc: `Faltam R$ ${fmt(CFG.clt - totalContratos)} para igualar o salário.` });
+
+  if (saldo < 0) alertas.push({ tipo: 'vermelho', icon: '🚨', titulo: 'Saldo negativo este mês', desc: 'Despesas superam toda a renda. Revise os gastos.' });
+  if (totalDespesas > CFG.despFixas * 0.3) alertas.push({ tipo: 'amarelo', icon: '💸', titulo: 'Gastos extras elevados', desc: `R$ ${fmt(totalDespesas)} em despesas avulsas registradas.` });
+
+  const progressoPerc = Math.min(100, Math.round((totalContratos / CFG.clt) * 100));
+  const barCor = progressoPerc >= 100 ? '#1e6e3e' : progressoPerc >= 50 ? '#f5a623' : '#d93025';
+
+  document.getElementById('inicio-content').innerHTML = `
+    <div class="card">
+      <div class="card-title">Saúde financeira — ${CALENDARIO[mesAtual].nome}</div>
+      <div class="saldo-hero">
+        <div class="saldo-label">Saldo estimado do mês</div>
+        <div class="saldo-valor ${saldo >= 0 ? 'positivo' : 'negativo'}">R$ ${fmt(saldo)}</div>
+        <div class="saldo-mes">CLT R$ ${fmt(CFG.clt)} + Drone R$ ${fmt(totalContratos)} − Saídas R$ ${fmt(totalSaidas)}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      ${alertas.map(a => `
+      <div class="meta-box ${a.tipo}">
+        <div class="meta-icon">${a.icon}</div>
+        <div class="meta-texto">
+          <div class="meta-titulo ${a.tipo}">${a.titulo}</div>
+          <div class="meta-desc">${a.desc}</div>
+        </div>
+      </div>`).join('')}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Receitas e gastos</div>
+      <div class="metric-row">
+        <div class="metric-icon">💼</div>
+        <div class="metric-info">
+          <div class="metric-label">CLT (salário fixo)</div>
+          <div class="metric-val">R$ ${fmt(CFG.clt)}</div>
+        </div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-icon">🚁</div>
+        <div class="metric-info">
+          <div class="metric-label">Drone — ${haTotal} ha · ${contratosM.length} contratos</div>
+          <div class="metric-val" style="color:var(--verde)">R$ ${fmt(totalContratos)}</div>
+          <div class="barra-wrap"><div class="barra-fill" style="width:${progressoPerc}%;background:${barCor}"></div></div>
+        </div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-icon">🏠</div>
+        <div class="metric-info">
+          <div class="metric-label">Despesas fixas (aluguel, carro, etc)</div>
+          <div class="metric-val" style="color:var(--vermelho)">−R$ ${fmt(despesasFixas)}</div>
+        </div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-icon">📦</div>
+        <div class="metric-info">
+          <div class="metric-label">Gastos avulsos registrados</div>
+          <div class="metric-val" style="color:${totalDespesas > 500 ? 'var(--vermelho)' : 'var(--cinza)'}">−R$ ${fmt(totalDespesas)}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Janela agrícola agora</div>
+      <div class="janela-badge ${cal.nivel}">🌱 ${nivelLabel}</div>
+      <div class="janela-texto">${DICAS[mesAtual]}</div>
+    </div>
+  `;
+}
+
+// =============================================
+// TELA LANÇAR
+// =============================================
+let tipoAtual = 'contrato';
+
+function setTipo(tipo) {
+  tipoAtual = tipo;
+  document.getElementById('btn-tipo-contrato').className = 'tipo-btn' + (tipo==='contrato' ? ' active-contrato' : '');
+  document.getElementById('btn-tipo-despesa').className = 'tipo-btn' + (tipo==='despesa' ? ' active-despesa' : '');
+  document.getElementById('form-contrato').style.display = tipo==='contrato' ? 'block' : 'none';
+  document.getElementById('form-despesa').style.display = tipo==='despesa' ? 'block' : 'none';
+}
+
+function calcTotal() {
+  const ha = parseFloat(document.getElementById('f-ha').value) || 0;
+  const vha = parseFloat(document.getElementById('f-vha').value) || 0;
+  const total = ha * vha;
+  const box = document.getElementById('contrato-total');
+  if (total > 0) {
+    box.style.display = 'block';
+    document.getElementById('contrato-total-val').textContent = 'R$ ' + fmt(total);
+  } else {
+    box.style.display = 'none';
+  }
+}
+
+async function salvarContrato() {
+  const btn = document.getElementById('btn-salvar-contrato');
+  const cliente = document.getElementById('f-cliente').value.trim();
+  const ha = parseFloat(document.getElementById('f-ha').value);
+  const vha = parseFloat(document.getElementById('f-vha').value);
+  const cultura = document.getElementById('f-cultura').value;
+  const status = document.getElementById('f-status').value;
+  const data = document.getElementById('f-data-contrato').value;
+  if (!cliente) { mostrarToast('Informe o nome do cliente'); return; }
+  if (!ha || !vha) { mostrarToast('Informe hectares e preço'); return; }
+  if (!data) { mostrarToast('Informe a data'); return; }
+  if (!CFG.sheetId) { mostrarToast('Configure a planilha primeiro'); return; }
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  try {
+    await apiAppend('Contratos!A:H', [[data, cliente, ha, vha, ha*vha, cultura, status, '']]);
+    mostrarToast('Contrato salvo! ✓');
+    document.getElementById('f-cliente').value = '';
+    document.getElementById('f-ha').value = '';
+    document.getElementById('f-vha').value = CFG.precoHaPadrao;
+    document.getElementById('f-status').value = 'pendente';
+    document.getElementById('contrato-total').style.display = 'none';
+    carregarDados();
+  } catch(e) {
+    mostrarToast('Erro: ' + e.message);
+  }
+  btn.disabled = false; btn.textContent = 'Salvar contrato';
+}
+
+async function salvarDespesa() {
+  const btn = document.getElementById('btn-salvar-desp');
+  const desc = document.getElementById('f-desc-desp').value.trim();
+  const valor = parseFloat(document.getElementById('f-val-desp').value);
+  const cat = document.getElementById('f-cat-desp').value;
+  const data = document.getElementById('f-data-desp').value;
+  if (!desc) { mostrarToast('Descreva a despesa'); return; }
+  if (!valor) { mostrarToast('Informe o valor'); return; }
+  if (!CFG.sheetId) { mostrarToast('Configure a planilha primeiro'); return; }
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  try {
+    await apiAppend('Despesas!A:E', [[data, desc, valor, cat, 'despesa']]);
+    mostrarToast('Despesa salva! ✓');
+    document.getElementById('f-desc-desp').value = '';
+    document.getElementById('f-val-desp').value = '';
+    carregarDados();
+  } catch(e) {
+    mostrarToast('Erro: ' + e.message);
+  }
+  btn.disabled = false; btn.textContent = 'Salvar despesa';
+}
+
+// =============================================
+// TELA CONTRATOS
+// =============================================
+function renderContratos() {
+  const agora = new Date();
+  const mesStr = `${agora.getFullYear()}-${String(agora.getMonth()+1).padStart(2,'0')}`;
+  const contratos = DADOS.contratos.filter(c => c.data && c.data.startsWith(mesStr));
+  const haTotal = contratos.reduce((s,c) => s + c.ha, 0);
+  const valorTotal = contratos.reduce((s,c) => s + c.total, 0);
+  const recebido = contratos.filter(c=>c.status==='recebido').reduce((s,c)=>s+c.total,0);
+  const pendente = contratos.filter(c=>c.status!=='recebido').reduce((s,c)=>s+c.total,0);
+
+  document.getElementById('resumo-contratos').innerHTML = `
+    <div class="card-title">Resumo do mês</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:var(--verde-claro);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--cinza);font-weight:600;text-transform:uppercase">Total ha</div>
+        <div style="font-size:26px;font-weight:700;color:var(--verde)">${haTotal}</div>
+      </div>
+      <div style="background:#f0f0f0;border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--cinza);font-weight:600;text-transform:uppercase">Contratos</div>
+        <div style="font-size:26px;font-weight:700;color:var(--texto)">${contratos.length}</div>
+      </div>
+      <div style="background:var(--verde-claro);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--cinza);font-weight:600;text-transform:uppercase">Recebido</div>
+        <div style="font-size:18px;font-weight:700;color:var(--verde)">R$ ${fmt(recebido)}</div>
+      </div>
+      <div style="background:var(--amarelo-claro);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--cinza);font-weight:600;text-transform:uppercase">A receber</div>
+        <div style="font-size:18px;font-weight:700;color:#856000">R$ ${fmt(pendente)}</div>
+      </div>
+    </div>
+  `;
+
+  const lista = document.getElementById('lista-contratos');
+  if (contratos.length === 0) {
+    lista.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Nenhum contrato este mês.<br>Toque em ➕ para lançar.</div></div>`;
+    return;
+  }
+  lista.innerHTML = contratos.slice().reverse().map(c => {
+    const statusMap = { pendente: 'status-pendente', executado: 'status-executado', recebido: 'status-recebido' };
+    const statusLabel = { pendente: 'Pendente', executado: 'Executado', recebido: 'Recebido' };
+    const dotCor = c.status === 'recebido' ? 'verde' : c.status === 'executado' ? '' : 'amarelo';
+    return `<div class="lista-item">
+      <div class="lista-dot ${dotCor}" style="${!dotCor?'background:var(--azul-claro)':''}">🚁</div>
+      <div class="lista-info">
+        <div class="lista-titulo">${c.cliente}</div>
+        <div class="lista-sub">${c.ha} ha · ${c.cultura} · ${formatData(c.data)}</div>
+        <span class="status-badge ${statusMap[c.status]||'status-pendente'}">${statusLabel[c.status]||c.status}</span>
+      </div>
+      <div class="lista-valor entrada">R$ ${fmt(c.total)}</div>
+    </div>`;
+  }).join('');
+}
+
+// =============================================
+// TELA CALENDÁRIO
+// =============================================
+function renderCalendario() {
+  const agora = new Date();
+  const mesAtual = agora.getMonth();
+
+  document.getElementById('mes-atual-nome').textContent = CALENDARIO[mesAtual].nome;
+
+  const cal = CALENDARIO[mesAtual];
+  const nivelCor = cal.nivel === 'alta' ? 'alta' : cal.nivel === 'media' ? 'media' : 'baixa';
+  const nivelTxt = cal.nivel === 'alta' ? '🟢 Alta temporada' : cal.nivel === 'media' ? '🟡 Temporada moderada' : '🔵 Entressafra';
+
+  const tagMap = (v) => {
+    if (v === 'alta') return '<span class="cal-tag alta">Aplicação</span>';
+    if (v === 'media') return '<span class="cal-tag media">Aplicação leve</span>';
+    if (v === 'plantio') return '<span class="cal-tag preparo">Plantio/preparo</span>';
+    return '<span class="cal-tag entressafra">Entressafra</span>';
+  };
+
+  document.getElementById('janela-agora').innerHTML = `
+    <div class="janela-badge ${nivelCor}">${nivelTxt}</div>
+    <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div style="padding:10px;background:var(--cinza-claro);border-radius:var(--radius-sm)">
+        <div style="font-size:11px;color:var(--cinza);margin-bottom:4px;font-weight:600">SOJA</div>
+        ${tagMap(cal.soja)}
+      </div>
+      <div style="padding:10px;background:var(--cinza-claro);border-radius:var(--radius-sm)">
+        <div style="font-size:11px;color:var(--cinza);margin-bottom:4px;font-weight:600">MILHO SAFRINHA</div>
+        ${tagMap(cal.milhoS)}
+      </div>
+      <div style="padding:10px;background:var(--cinza-claro);border-radius:var(--radius-sm)">
+        <div style="font-size:11px;color:var(--cinza);margin-bottom:4px;font-weight:600">MILHO 1ª SAFRA</div>
+        ${tagMap(cal.milho1)}
+      </div>
+      <div style="padding:10px;background:var(--cinza-claro);border-radius:var(--radius-sm)">
+        <div style="font-size:11px;color:var(--cinza);margin-bottom:4px;font-weight:600">TRIGO</div>
+        ${tagMap(cal.trigo)}
+      </div>
+    </div>
+  `;
+
+  const prox = [];
+  for (let i = 1; i <= 3; i++) {
+    const idx = (mesAtual + i) % 12;
+    const c = CALENDARIO[idx];
+    if (c.nivel !== 'baixa') prox.push(c);
+  }
+
+  let calHtml = '';
+  CALENDARIO.forEach((c, i) => {
+    const atual = i === mesAtual;
+    const cor = c.nivel === 'alta' ? 'alta' : c.nivel === 'media' ? 'media' : 'preparo';
+    calHtml += `
+      <div class="cal-mes" style="${atual ? 'border-left:3px solid var(--verde);padding-left:10px;' : ''}">
+        <div class="cal-mes-titulo">
+          ${atual ? '📍 ' : ''}${c.nome}
+          ${atual ? '<span style="font-size:11px;background:var(--verde);color:white;padding:2px 8px;border-radius:10px;font-weight:600">Agora</span>' : ''}
+        </div>
+        <div class="cal-culturas">
+          ${c.soja !== 'entressafra' ? `<span class="cal-tag ${c.soja === 'alta' ? 'alta' : c.soja === 'media' ? 'media' : 'preparo'}">Soja — ${c.soja === 'alta' ? 'Aplicação' : c.soja === 'media' ? 'Leve' : 'Plantio'}</span>` : ''}
+          ${c.milhoS !== 'entressafra' ? `<span class="cal-tag ${c.milhoS === 'alta' ? 'alta' : c.milhoS === 'media' ? 'media' : 'preparo'}">Milho safrinha — ${c.milhoS === 'alta' ? 'Aplicação' : c.milhoS === 'media' ? 'Leve' : 'Plantio'}</span>` : ''}
+          ${c.milho1 !== 'entressafra' ? `<span class="cal-tag ${c.milho1 === 'alta' ? 'alta' : c.milho1 === 'media' ? 'media' : 'preparo'}">Milho 1ª — ${c.milho1 === 'alta' ? 'Aplicação' : c.milho1 === 'media' ? 'Leve' : 'Plantio'}</span>` : ''}
+          ${c.trigo !== 'entressafra' ? `<span class="cal-tag ${c.trigo === 'alta' ? 'alta' : c.trigo === 'media' ? 'media' : 'preparo'}">Trigo — ${c.trigo === 'alta' ? 'Aplicação' : c.trigo === 'media' ? 'Leve' : 'Plantio'}</span>` : ''}
+          ${c.soja === 'entressafra' && c.milhoS === 'entressafra' && c.milho1 === 'entressafra' && c.trigo === 'entressafra' ? '<span class="cal-tag entressafra">Entressafra — Prospectar</span>' : ''}
+        </div>
+      </div>
+    `;
+  });
+  document.getElementById('cal-content').innerHTML = calHtml;
+  document.getElementById('dica-prospeccao').textContent = DICAS[mesAtual];
+}
+
+// =============================================
+// TELA META
+// =============================================
+function atualizarSim() {
+  const preco = parseInt(document.getElementById('sim-preco')?.value || 55);
+  const ha = parseInt(document.getElementById('sim-ha')?.value || 60);
+  const dias = parseInt(document.getElementById('sim-dias')?.value || 14);
+  if (!document.getElementById('sim-preco')) return;
+  document.getElementById('sim-preco-val').textContent = 'R$ ' + preco;
+  document.getElementById('sim-ha-val').textContent = ha + ' ha/dia';
+  document.getElementById('sim-dias-val').textContent = dias + ' dias';
+
+  const bruto = preco * ha * dias;
+  const custo = Math.round(bruto * 0.35);
+  const liquido = bruto - custo;
+  const diff = liquido - CFG.clt;
+
+  document.getElementById('sim-resultado').innerHTML = `
+    <div class="res-card" style="background:var(--verde-claro)">
+      <div class="res-label" style="color:var(--verde)">Faturamento bruto</div>
+      <div class="res-val" style="color:var(--verde)">R$ ${fmt(bruto)}</div>
+    </div>
+    <div class="res-card" style="background:var(--vermelho-claro)">
+      <div class="res-label" style="color:var(--vermelho)">Custo op. (35%)</div>
+      <div class="res-val" style="color:var(--vermelho)">R$ ${fmt(custo)}</div>
+    </div>
+    <div class="res-card" style="background:var(--azul-claro)">
+      <div class="res-label" style="color:var(--azul)">Lucro líquido</div>
+      <div class="res-val" style="color:var(--azul)">R$ ${fmt(liquido)}</div>
+    </div>
+    <div class="res-card" style="background:${diff>=0?'var(--verde-claro)':'var(--vermelho-claro)'}">
+      <div class="res-label" style="color:${diff>=0?'var(--verde)':'var(--vermelho)'}">${diff>=0?'Acima do CLT':'Abaixo do CLT'}</div>
+      <div class="res-val" style="color:${diff>=0?'var(--verde)':'var(--vermelho)'}">${diff>=0?'+':'-'}R$ ${fmt(Math.abs(diff))}</div>
+    </div>
+  `;
+
+  const saldoDevedor = 140000;
+  const mesesPayback = liquido > 0 ? Math.ceil(saldoDevedor / liquido) : 0;
+
+  document.getElementById('payback-info').innerHTML = `
+    <div class="meta-box ${mesesPayback <= 18 ? 'verde' : mesesPayback <= 36 ? 'amarelo' : 'vermelho'}">
+      <div class="meta-icon">${mesesPayback <= 18 ? '✅' : mesesPayback <= 36 ? '⏳' : '⚠️'}</div>
+      <div class="meta-texto">
+        <div class="meta-titulo ${mesesPayback <= 18 ? 'verde' : mesesPayback <= 36 ? 'amarelo' : 'vermelho'}">
+          ${mesesPayback > 0 ? mesesPayback + ' meses para quitar o drone' : 'Configure os sliders'}
+        </div>
+        <div class="meta-desc">Saldo devedor estimado: R$ ${fmt(saldoDevedor)}. Com este ritmo de operação.</div>
+      </div>
+    </div>
+  `;
+
+  const agora = new Date();
+  const mesAtual = agora.getMonth();
+  const contratosM = DADOS.contratos.filter(c => {
+    const ms = `${agora.getFullYear()}-${String(mesAtual+1).padStart(2,'0')}`;
+    return c.data && c.data.startsWith(ms);
+  });
+  const faturadoM = contratosM.reduce((s,c) => s + c.total, 0);
+  const diffMes = liquido - faturadoM;
+
+  document.getElementById('meta-status-card').innerHTML = `
+    <div class="card-title">Sua meta este mês</div>
+    <div style="font-size:13px;color:var(--cinza);margin-bottom:10px">Para igualar o CLT com só o drone:</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <span style="font-size:14px;color:var(--texto)">Precisa faturar</span>
+      <span style="font-size:18px;font-weight:700;color:var(--verde)">R$ ${fmt(CFG.clt)}</span>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <span style="font-size:14px;color:var(--texto)">Já faturou</span>
+      <span style="font-size:18px;font-weight:700;color:var(--azul)">R$ ${fmt(faturadoM)}</span>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <span style="font-size:14px;color:var(--texto)">Falta</span>
+      <span style="font-size:18px;font-weight:700;color:${faturadoM >= CFG.clt ? 'var(--verde)' : 'var(--vermelho)'}">
+        ${faturadoM >= CFG.clt ? '✓ Meta batida!' : 'R$ ' + fmt(CFG.clt - faturadoM)}
+      </span>
+    </div>
+    <div class="barra-wrap" style="height:8px">
+      <div class="barra-fill" style="width:${Math.min(100, Math.round(faturadoM/CFG.clt*100))}%;background:${faturadoM>=CFG.clt?'var(--verde)':'var(--amarelo)'}"></div>
+    </div>
+    <div style="font-size:12px;color:var(--cinza);margin-top:6px">${Math.min(100,Math.round(faturadoM/CFG.clt*100))}% da meta mensal</div>
+  `;
+}
+
+// =============================================
+// NAVEGAÇÃO
+// =============================================
+function irPara(tela) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-' + tela).classList.add('active');
+  document.getElementById('nav-' + tela).classList.add('active');
+  if (tela === 'meta') atualizarSim();
+  if (tela === 'contratos') renderContratos();
+}
+
+// =============================================
+// UTILS
+// =============================================
+function fmt(v) {
+  return Math.round(v).toLocaleString('pt-BR');
+}
+
+function formatData(d) {
+  if (!d) return '';
+  const p = d.split('-');
+  if (p.length < 3) return d;
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+
+function mostrarToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
