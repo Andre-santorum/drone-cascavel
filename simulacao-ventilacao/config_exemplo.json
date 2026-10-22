@@ -1,0 +1,57 @@
+{
+  "_comentario": "Unidades SI (m, m3/h, W, graus C). Eixo x = comprimento (x=0 frente/entrada de ar, x=comprimento parede dos exaustores), y = largura, z = altura.",
+
+  "nome": "aviario_8_exaustores",
+  "tipo": "aviario",
+
+  "galpao": {
+    "comprimento": 125.0,
+    "largura": 14.0,
+    "altura": 3.0
+  },
+
+  "malha": {
+    "tamanho_celula": 0.25,
+    "_dica": "0.5 = teste rapido (minutos); 0.25 = bom (~1 h); 0.15 = fino (varias horas, ~6 GB RAM)"
+  },
+
+  "exaustores": {
+    "quantidade": 8,
+    "vazao_m3h_cada": 35000,
+    "lado_m": 1.38,
+    "altura_centro_m": 1.2,
+    "_dica": "Use a vazao da curva do fabricante na pressao estatica de trabalho (ex.: 25-30 Pa), nao a vazao livre maxima.",
+    "posicoes_manuais": []
+  },
+
+  "entradas_ar": [
+    {"nome": "pad_esquerdo", "parede": "esquerda", "inicio": 0.5, "fim": 15.5, "z_min": 0.4, "z_max": 2.0},
+    {"nome": "pad_direito",  "parede": "direita",  "inicio": 0.5, "fim": 15.5, "z_min": 0.4, "z_max": 2.0}
+  ],
+
+  "clima": {
+    "temperatura_entrada_C": 26.0,
+    "temperatura_inicial_C": 30.0
+  },
+
+  "cargas_termicas": {
+    "calor_animais_W_m2": 60.0,
+    "_dica_animais": "Calor sensivel liberado pelo lote dividido pela area do piso. Frango 2,8 kg a 15 aves/m2 ~ 60-90 W/m2; suino terminacao ~ 40-70 W/m2.",
+    "calor_telhado_W_m2": 15.0,
+    "_dica_telhado": "Ganho solar que atravessa o telhado/forro. Forro bem isolado ~ 5-15; telhado sem forro ~ 30-60."
+  },
+
+  "obstaculos_stl": [],
+  "_dica_obstaculos": "Opcional: lista de arquivos .stl (em metros, mesmas coordenadas) com comedouros, pilares, baias, animais simplificados. Ex.: [\"modelos/baias.stl\"]",
+
+  "analise": {
+    "altura_animais_m": 0.3,
+    "velocidade_alvo_m_s": 2.5,
+    "_dica": "Aves: altura 0,3 m, alvo 2,5-3,0 m/s no final do lote. Suinos terminacao: altura 0,6 m, alvo ~1,0-1,5 m/s."
+  },
+
+  "solver": {
+    "iteracoes": 1500,
+    "nucleos_cpu": 4
+  }
+}
