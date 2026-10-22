@@ -13,6 +13,8 @@ import argparse
 import json
 import math
 
+import exaustor as modelo_exaustor
+
 RHO_AR = 1.16   # kg/m3 a ~30 C
 CP_AR = 1005.0  # J/(kg K)
 
@@ -25,7 +27,14 @@ def calcular(cfg, n_exaustores):
     volume = secao * g["comprimento"]
     area_piso = g["largura"] * g["comprimento"]
 
-    vazao_m3s = n_exaustores * ex["vazao_m3h_cada"] / 3600.0
+    if ex.get("modelo"):
+        # vazao real do exaustor na pressao que os pads impoem (motor/polias/helice)
+        mod = modelo_exaustor.modelos(cfg)[ex["modelo"]]
+        pressao, qs = modelo_exaustor.resolver(cfg, [mod] * n_exaustores)
+        vazao_m3s = sum(qs)
+    else:
+        pressao = None
+        vazao_m3s = n_exaustores * ex["vazao_m3h_cada"] / 3600.0
     velocidade = vazao_m3s / secao
     troca_s = volume / vazao_m3s if vazao_m3s > 0 else math.inf
     calor_w = (cargas["calor_animais_W_m2"] + cargas["calor_telhado_W_m2"]) * area_piso
@@ -41,6 +50,7 @@ def calcular(cfg, n_exaustores):
         "delta_t_C": delta_t,
         "t_saida_C": cfg["clima"]["temperatura_entrada_C"] + delta_t,
         "vel_entrada_m_s": vel_entrada,
+        "pressao_Pa": pressao,
     }
 
 
@@ -56,20 +66,25 @@ def main():
     g = cfg["galpao"]
     alvo = cfg["analise"]["velocidade_alvo_m_s"]
     secao = g["largura"] * g["altura"]
-    necessarios = math.ceil(alvo * secao * 3600 / cfg["exaustores"]["vazao_m3h_cada"])
+    necessarios = next((n for n in range(1, 200) if calcular(cfg, n)["velocidade_m_s"] >= alvo), 200)
 
     quantidades = args.exaustores or sorted({cfg["exaustores"]["quantidade"], necessarios})
     print(f"Galpao {g['comprimento']} x {g['largura']} x {g['altura']} m "
           f"(secao {secao:.1f} m2, volume {secao * g['comprimento']:.0f} m3)")
-    print(f"Exaustor: {cfg['exaustores']['vazao_m3h_cada']:.0f} m3/h cada")
+    if cfg["exaustores"].get("modelo"):
+        print(f"Exaustor: modelo '{cfg['exaustores']['modelo']}' (vazao conforme a pressao; "
+              f"detalhes: python3 exaustor.py {args.config})")
+    else:
+        print(f"Exaustor: {cfg['exaustores']['vazao_m3h_cada']:.0f} m3/h cada")
     print(f"Para {alvo} m/s de velocidade media sao necessarios ~{necessarios} exaustores.\n")
     print(f"{'Exaust.':>7} {'Vazao m3/h':>11} {'Vel. m/s':>9} {'Troca ar s':>11} "
-          f"{'dT C':>6} {'T saida C':>10} {'Vel. pad m/s':>13}")
+          f"{'dT C':>6} {'T saida C':>10} {'Vel. pad m/s':>13} {'Pressao Pa':>11}")
     for n in quantidades:
         r = calcular(cfg, n)
+        pressao = "-" if r["pressao_Pa"] is None else f"{r['pressao_Pa']:.0f}"
         print(f"{r['exaustores']:>7} {r['vazao_m3h']:>11.0f} {r['velocidade_m_s']:>9.2f} "
               f"{r['troca_ar_s']:>11.0f} {r['delta_t_C']:>6.2f} {r['t_saida_C']:>10.1f} "
-              f"{r['vel_entrada_m_s']:>13.2f}")
+              f"{r['vel_entrada_m_s']:>13.2f} {pressao:>11}")
     print("\nReferencias: troca de ar <= 60 s em tunel; velocidade no pad ~1,8-2,0 m/s "
           "(acima disso o pad perde eficiencia e arrasta agua).")
 

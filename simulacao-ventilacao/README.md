@@ -170,6 +170,112 @@ imprime. No teste com um barracão de 125 × 14 m (beiral 3,0 m, cumeeira 4,5 m)
 
 ---
 
+## 3B. Editor 3D: exaustores, entradas de ar e itens
+
+Para posicionar tudo com o mouse e rodar a simulação de novo:
+
+```bash
+cd ~/drone-cascavel/simulacao-ventilacao
+python3 editor.py modelos/<missao>/config.json     # ou config_exemplo.json
+```
+
+Abra **http://localhost:8765** no navegador do Windows (Chrome ou Edge). O editor funciona sem
+internet.
+
+- **Exaustores:** use **+ Exaustor** e clique na parede (com Shift, coloca vários seguidos).
+  Clique num exaustor para editar parede, posição, altura e modelo. Com ele selecionado, dá
+  para arrastá-lo pela parede. **Redistribuir** espalha N exaustores no fundo; os que não
+  cabem vão para as laterais. A vazão de cada um aparece na lista e o total no topo.
+- **Entradas de ar:** use **+ Entrada de ar** (pad ou cortina) e clique na parede. Depois
+  ajuste início, fim, altura, tipo (pad/abertura) e espessura do pad.
+- **Itens:** clique num item da **Biblioteca** para colocá-lo no galpão. Mova com **G**, gire
+  com **R** ou digite x, y, z, giro e escala. **Delete** exclui.
+- **Motor/hélice:** veja a seção 3C.
+- **Galpão:** medidas, clima, calor dos animais e do telhado, pressão estática medida.
+- **Simular:** salva o projeto, gera a malha, roda e mostra o progresso. No fim, os mapas
+  aparecem no painel e a velocidade (ou temperatura) na altura dos animais aparece colorida
+  dentro do 3D.
+
+Tudo é salvo no `config.json` do projeto, com cópia `.bak` da versão anterior. Para refazer a
+simulação depois de mudar algo, é só clicar em **Salvar e simular** de novo.
+
+---
+
+## 3C. Exaustor a partir do motor, polias, correia e hélice
+
+Na aba **Motor/hélice** (ou em `modelos_exaustor` no JSON) informe para cada modelo de exaustor:
+
+| Campo | Exemplo |
+|---|---|
+| Motor | 1,5 CV, 1720 rpm |
+| Polia do motor / polia da hélice | 100 mm / 390 mm |
+| Correia | A-62 (perfil A, 62" internas) |
+| Hélice de ponta a ponta | 1,27 m, 6 pás, ângulo 30° |
+| Moldura (abertura na parede) | 1,38 m |
+| Rotação medida da hélice (opcional) | com tacômetro, substitui o cálculo pelas polias |
+| Curva do fabricante (opcional) | pares "pressão Pa; vazão m³/h" do catálogo |
+
+O programa calcula:
+
+- **a rotação da hélice** pela relação de polias (descontando 3 % de escorregamento da correia);
+- **a correia:** velocidade e distância entre centros que o código da correia permite;
+- **a curva vazão × pressão do exaustor.** Se você informar a curva do catálogo, vale a do
+  fabricante. Senão, é estimada pelas leis de semelhança de ventiladores, a partir de um
+  exaustor de 50" típico (erro de ±15 %);
+- **o ponto de operação:** a pressão em que a vazão dos exaustores é igual à que os pads
+  deixam passar. Mais exaustores ou pad mais grosso aumentam a pressão e cada exaustor
+  passa a puxar menos;
+- **a carga do motor:** avisa **SOBRECARGA** quando a polia escolhida exige mais do que o motor.
+
+Cada exaustor pode ter um modelo diferente, e a simulação usa a vazão real de cada um.
+Pelo terminal: `python3 exaustor.py config.json` imprime a ficha de cada modelo.
+
+> Exemplo (config de exemplo): trocar a polia da hélice de 390 para 350 mm sobe a hélice de
+> 428 para 477 rpm e a vazão de 32.700 para 36.550 m³/h por exaustor. Mas o motor de 1,5 CV
+> vai a ~126 % de carga e o programa avisa a sobrecarga.
+
+---
+
+## 3D. Criar itens: arquivos 3D e fotos
+
+**Arquivo 3D pronto** (SketchUp, Blender, catálogo do fabricante, app de celular): na aba
+**Itens → Importar modelo 3D** ou pelo terminal:
+
+```bash
+python3 preparar_item.py silo.obj --nome silo --medida altura=6.2
+```
+
+O programa põe o objeto em pé, apoia no chão, coloca na escala da medida informada, fecha
+buracos e o fundo (exigência da malha) e salva em `biblioteca/`. Confira a figura
+`biblioteca/<nome>.png`. Se o objeto ficar deitado, troque o "eixo para cima".
+
+**A partir de fotos** (ex.: fotografar um exaustor por todos os lados): na aba
+**Itens → Criar a partir de fotos**, ou:
+
+```bash
+python3 fotos_para_3d.py /mnt/c/Users/<voce>/Pictures/exaustor --nome exaustor_50 --medida largura=1.38
+```
+
+A reconstrução usa o **Meshroom** (gratuito, AliceVision), que roda na GTX 1650. Baixe em
+<https://github.com/alicevision/Meshroom/releases>, descompacte em `C:\` e pronto: o script
+o encontra sozinho. Leva de 20 minutos a algumas horas, conforme o número de fotos.
+
+Como fotografar:
+- tire de **40 a 150 fotos** dando a volta completa, em 2 ou 3 alturas, com cada foto
+  cobrindo ~70 % da anterior;
+- use luz uniforme (dia nublado/sombra), sem flash, foco nítido e sem zoom;
+- chapa galvanizada brilhante reconstrói mal: fita crepe ou pó fosco em alguns pontos ajudam;
+- **meça uma dimensão com a trena**, porque fotos não têm escala.
+
+Sem placa NVIDIA, marque **modo rápido** (`--rapido`), que dá menos detalhe. Também dá para
+fazer o 3D num app de celular (RealityScan, Polycam, KIRI Engine), exportar OBJ e importar.
+
+Importante: na simulação, o que define o ar puxado é a **vazão** do exaustor (seção 3C), não o
+desenho dele. O modelo 3D do exaustor serve para visualização e para obstáculos próximos.
+O desenho conta mesmo para silos, comedouros, baias e pilares, que desviam o ar.
+
+---
+
 ## 4. Usando o seu modelo 3D
 
 Sistema de coordenadas usado (o mesmo que o modelo precisa ter):
@@ -252,6 +358,11 @@ primeiro suspeito é a vazão real dos exaustores.
 
 | Arquivo | Função |
 |---|---|
+| `editor.py` + `editor/` | editor 3D no navegador (exaustores, entradas, itens, motor, simulação) |
+| `exaustor.py` | modelo do exaustor: polias, correia, curva, ponto de operação, carga do motor |
+| `preparar_item.py` | coloca qualquer malha 3D em escala, fecha e salva na biblioteca |
+| `fotos_para_3d.py` | fotos → Meshroom → item da biblioteca |
+| `geometria.py` | leitura/escrita de STL/OBJ/PLY, transformações, fechamento de malhas |
 | `simular_terra.sh` | um comando: importa do DJI Terra, gera, roda e faz o relatório |
 | `importar_terra.py` | lê OBJ/PLY/LAS do DJI Terra, acha e mede o barracão, gera `galpao.stl` + `config.json` |
 | `calculo_rapido.py` | conta analítica: velocidade média, troca de ar, ΔT, velocidade no pad |
@@ -275,5 +386,12 @@ Testado com OpenFOAM 12 no Ubuntu 24.04 (o mesmo que você vai instalar):
 - projeto simulado do DJI Terra (terreno inclinado, barracão girado 35° em coordenadas UTM,
   outro galpão e árvores ao redor), em OBJ, PLY e LAS: barracão certo encontrado e medido,
   simulação completa rodou com erro de massa de 0,00 %;
+- editor 3D testado num navegador automático: exaustor colocado clicando na parede lateral
+  e arrastado 3 m, item da biblioteca posicionado, polia trocada no painel do motor (o
+  aviso de sobrecarga apareceu), simulação disparada pelo editor e concluída em 10 min (projeto
+  importado do Terra, 9 exaustores), com os mapas e o plano colorido no 3D;
+- preparo de item: um "scan" aberto, com ruído, de lado, em escala errada e com sujeira
+  solta saiu em pé e fechado, com 1,38 × 0,61 × 1,38 m (real: 1,38 × 0,60 × 1,38 m). A
+  reconstrução pelo Meshroom não pôde ser testada aqui (precisa da placa NVIDIA);
 - 12 exaustores (8 no fundo + 4 nas laterais), obstáculos STL (linhas de comedouro) e
   envoltória STL com telhado em duas águas: malha gerada com "Mesh OK" e cálculo estável.

@@ -1,3 +1,7 @@
 casos/
 modelos/
 __pycache__/
+fotogrametria/
+biblioteca/originais/
+editor_*.log
+*.bak

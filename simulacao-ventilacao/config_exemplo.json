@@ -1,57 +1,91 @@
 {
   "_comentario": "Unidades SI (m, m3/h, W, graus C). Eixo x = comprimento (x=0 frente/entrada de ar, x=comprimento parede dos exaustores), y = largura, z = altura.",
-
   "nome": "aviario_8_exaustores",
   "tipo": "aviario",
-
   "galpao": {
     "comprimento": 125.0,
     "largura": 14.0,
     "altura": 3.0
   },
-
   "malha": {
     "tamanho_celula": 0.25,
     "_dica": "0.5 = teste rapido (minutos); 0.25 = bom (~1 h); 0.15 = fino (varias horas, ~6 GB RAM)"
   },
-
   "exaustores": {
     "quantidade": 8,
+    "modelo": "exaustor_50pol",
+    "_dica_modelo": "Nome de um item de modelos_exaustor. Sem modelo, vale vazao_m3h_cada fixa.",
     "vazao_m3h_cada": 35000,
     "lado_m": 1.38,
     "altura_centro_m": 1.2,
     "_dica": "Use a vazao da curva do fabricante na pressao estatica de trabalho (ex.: 25-30 Pa), nao a vazao livre maxima.",
-    "posicoes_manuais": []
+    "posicoes_manuais": [],
+    "_dica_posicoes": "Lista {parede, posicao, altura, modelo}. O editor 3D preenche isto."
   },
-
+  "modelos_exaustor": {
+    "exaustor_50pol": {
+      "motor_cv": 1.5,
+      "motor_rpm": 1720,
+      "polia_motor_mm": 100,
+      "polia_helice_mm": 390,
+      "correia": "A-62",
+      "helice_diametro_m": 1.27,
+      "pas": 6,
+      "angulo_pas_graus": 30,
+      "moldura_m": 1.38,
+      "curva_fabricante": [],
+      "_dica": "curva_fabricante opcional: [[pressao_Pa, vazao_m3h], ...] da tabela do fabricante (na rotacao curva_rpm). Se vazia, a curva e estimada."
+    }
+  },
+  "sistema": {
+    "pressao_estatica_Pa": null,
+    "perda_extra_Pa": 3.0,
+    "_dica": "Se mediu a pressao estatica com manometro, informe aqui; senao e calculada pela perda dos pads."
+  },
   "entradas_ar": [
-    {"nome": "pad_esquerdo", "parede": "esquerda", "inicio": 0.5, "fim": 15.5, "z_min": 0.4, "z_max": 2.0},
-    {"nome": "pad_direito",  "parede": "direita",  "inicio": 0.5, "fim": 15.5, "z_min": 0.4, "z_max": 2.0}
+    {
+      "nome": "pad_esquerdo",
+      "parede": "esquerda",
+      "inicio": 0.5,
+      "fim": 15.5,
+      "z_min": 0.4,
+      "z_max": 2.0,
+      "tipo": "pad",
+      "espessura_mm": 150
+    },
+    {
+      "nome": "pad_direito",
+      "parede": "direita",
+      "inicio": 0.5,
+      "fim": 15.5,
+      "z_min": 0.4,
+      "z_max": 2.0,
+      "tipo": "pad",
+      "espessura_mm": 150
+    }
   ],
-
   "clima": {
     "temperatura_entrada_C": 26.0,
     "temperatura_inicial_C": 30.0
   },
-
   "cargas_termicas": {
     "calor_animais_W_m2": 60.0,
     "_dica_animais": "Calor sensivel liberado pelo lote dividido pela area do piso. Frango 2,8 kg a 15 aves/m2 ~ 60-90 W/m2; suino terminacao ~ 40-70 W/m2.",
     "calor_telhado_W_m2": 15.0,
     "_dica_telhado": "Ganho solar que atravessa o telhado/forro. Forro bem isolado ~ 5-15; telhado sem forro ~ 30-60."
   },
-
   "obstaculos_stl": [],
   "_dica_obstaculos": "Opcional: lista de arquivos .stl (em metros, mesmas coordenadas) com comedouros, pilares, baias, animais simplificados. Ex.: [\"modelos/baias.stl\"]",
-
   "analise": {
     "altura_animais_m": 0.3,
     "velocidade_alvo_m_s": 2.5,
     "_dica": "Aves: altura 0,3 m, alvo 2,5-3,0 m/s no final do lote. Suinos terminacao: altura 0,6 m, alvo ~1,0-1,5 m/s."
   },
-
   "solver": {
     "iteracoes": 1500,
     "nucleos_cpu": 4
-  }
+  },
+  "_dica_entradas": "tipo: pad (com espessura_mm) ou abertura (cortina/inlet sem pad).",
+  "itens": [],
+  "_dica_itens": "Itens da biblioteca: {nome, arquivo, posicao [x,y,z], rotacao_graus [rx,ry,rz], escala}. O editor 3D preenche isto."
 }

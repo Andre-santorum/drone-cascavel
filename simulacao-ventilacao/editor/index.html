@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editor de Ventilação</title>
+<style>
+:root {
+  --fundo: #f4f5f7; --painel: #ffffff; --texto: #1d2329; --sec: #5d6873; --borda: #dde1e6;
+  --verde: #1e7a46; --verde-claro: #e6f4ec; --laranja: #e07a1f; --azul: #2f6fd6; --vermelho: #c8372d;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fundo: #15191d; --painel: #1e2328; --texto: #e7eaee; --sec: #9aa5b1; --borda: #333b43;
+    --verde-claro: #1f3528;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--fundo); color: var(--texto); }
+#app { display: grid; grid-template-columns: 1fr 400px; height: 100vh; }
+#vista { position: relative; overflow: hidden; }
+#vista canvas { display: block; }
+#barra3d { position: absolute; top: 10px; left: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+#legenda { position: absolute; bottom: 10px; left: 10px; background: var(--painel); border: 1px solid var(--borda);
+  border-radius: 8px; padding: 8px 10px; font-size: 12px; max-width: 420px; }
+#barraResultado { position: absolute; top: 10px; right: 10px; background: var(--painel); border: 1px solid var(--borda);
+  border-radius: 8px; padding: 6px 8px; display: none; font-size: 12px; }
+#escala { width: 160px; height: 10px; border-radius: 3px; margin: 4px 0; }
+aside { background: var(--painel); border-left: 1px solid var(--borda); display: flex; flex-direction: column; min-height: 0; }
+header { padding: 12px 14px 0; }
+header h1 { font-size: 16px; margin: 0 0 2px; }
+header .sub { color: var(--sec); font-size: 12px; overflow-wrap: anywhere; }
+nav { display: flex; flex-wrap: wrap; gap: 2px; padding: 10px 10px 0; border-bottom: 1px solid var(--borda); }
+nav button { border: none; background: none; padding: 7px 9px; border-radius: 6px 6px 0 0; color: var(--sec); cursor: pointer; font: inherit; }
+nav button.ativo { background: var(--verde-claro); color: var(--verde); font-weight: 600; }
+.aba { display: none; padding: 12px 14px; overflow: auto; flex: 1; }
+.aba.ativa { display: block; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--sec); margin: 14px 0 8px; }
+h2:first-child { margin-top: 0; }
+label { display: block; font-size: 12px; color: var(--sec); margin-bottom: 6px; }
+input, select, textarea { width: 100%; padding: 6px 8px; border: 1px solid var(--borda); border-radius: 6px;
+  background: var(--fundo); color: var(--texto); font: inherit; }
+textarea { min-height: 70px; font-family: ui-monospace, monospace; font-size: 12px; }
+.grade { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+.grade3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0 8px; }
+button.b { border: 1px solid var(--borda); background: var(--painel); color: var(--texto); border-radius: 6px;
+  padding: 6px 10px; cursor: pointer; font: inherit; }
+button.b:hover { border-color: var(--verde); }
+button.p { background: var(--verde); color: #fff; border-color: var(--verde); }
+button.perigo { color: var(--vermelho); }
+button.ligado { background: var(--verde); color: #fff; }
+.lista { border: 1px solid var(--borda); border-radius: 8px; max-height: 210px; overflow: auto; }
+.lista div { padding: 6px 9px; border-bottom: 1px solid var(--borda); cursor: pointer; display: flex; justify-content: space-between; gap: 8px; }
+.lista div:last-child { border-bottom: none; }
+.lista div.sel { background: var(--verde-claro); }
+.lista small { color: var(--sec); }
+.acoes { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+pre { background: var(--fundo); border: 1px solid var(--borda); border-radius: 6px; padding: 8px; font-size: 11.5px;
+  white-space: pre-wrap; max-height: 300px; overflow: auto; }
+.cartao { border: 1px solid var(--borda); border-radius: 8px; padding: 10px; margin: 8px 0; }
+.kpi { font-size: 22px; font-weight: 700; }
+.dica { font-size: 12px; color: var(--sec); }
+progress { width: 100%; }
+img.res { width: 100%; border: 1px solid var(--borda); border-radius: 6px; margin: 4px 0; }
+#aviso { position: fixed; bottom: 14px; right: 414px; background: var(--texto); color: var(--painel); padding: 8px 12px;
+  border-radius: 8px; display: none; z-index: 10; }
+@media (max-width: 900px) { #app { grid-template-columns: 1fr; grid-template-rows: 55vh auto; height: auto; } #aviso { right: 14px; } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "/web/vendor/three.module.min.js",
+  "three/addons/": "/web/vendor/addons/"
+} }
+</script>
+</head>
+<body>
+<div id="app">
+  <div id="vista">
+    <div id="barra3d">
+      <button class="b" id="mAddExaustor" title="Clique numa parede para colocar">+ Exaustor</button>
+      <button class="b" id="mAddEntrada" title="Clique numa parede para colocar">+ Entrada de ar</button>
+      <button class="b" id="mMover">Mover (G)</button>
+      <button class="b" id="mGirar">Girar (R)</button>
+      <button class="b" id="mVista">Vista de cima</button>
+      <button class="b" id="mResultado" style="display:none">Ocultar resultado</button>
+    </div>
+    <div id="barraResultado">
+      <select id="campoResultado" style="width:auto"><option value="vel">Velocidade (m/s)</option><option value="T">Temperatura (°C)</option></select>
+      <canvas id="escala" width="160" height="10"></canvas>
+      <div style="display:flex;justify-content:space-between"><span id="escMin"></span><span id="escMax"></span></div>
+    </div>
+    <div id="legenda">Arraste para girar a vista · botão direito move · roda dá zoom ·
+      clique num exaustor, entrada ou item para editar. <b>Laranja</b> = exaustor, <b>azul</b> = entrada de ar.</div>
+  </div>
+  <aside>
+    <header>
+      <h1>Editor de Ventilação</h1>
+      <div class="sub" id="arquivo"></div>
+    </header>
+    <nav id="abas">
+      <button data-aba="exaustores" class="ativo">Exaustores</button>
+      <button data-aba="entradas">Entradas</button>
+      <button data-aba="itens">Itens</button>
+      <button data-aba="modelos">Motor/hélice</button>
+      <button data-aba="galpao">Galpão</button>
+      <button data-aba="simular">Simular</button>
+    </nav>
+
+    <section class="aba ativa" id="aba-exaustores">
+      <div class="cartao" id="resumoOperacao"></div>
+      <h2>Exaustores instalados</h2>
+      <div class="lista" id="listaExaustores"></div>
+      <div class="acoes">
+        <button class="b" id="addExaustor">+ Adicionar</button>
+        <button class="b" id="distribuir">Redistribuir no fundo</button>
+      </div>
+      <div id="editExaustor"></div>
+    </section>
+
+    <section class="aba" id="aba-entradas">
+      <h2>Entradas de ar (pads, cortinas, inlets)</h2>
+      <div class="lista" id="listaEntradas"></div>
+      <div class="acoes"><button class="b" id="addEntrada">+ Adicionar</button></div>
+      <div id="editEntrada"></div>
+    </section>
+
+    <section class="aba" id="aba-itens">
+      <h2>Itens no galpão</h2>
+      <div class="lista" id="listaItens"></div>
+      <div id="editItem"></div>
+      <h2>Biblioteca</h2>
+      <div class="lista" id="listaBiblioteca"></div>
+      <p class="dica">Clique num item da biblioteca para colocá-lo no galpão.</p>
+      <h2>Importar modelo 3D (STL, OBJ, PLY)</h2>
+      <div class="grade">
+        <label>Nome<input id="impNome" placeholder="silo_racao"></label>
+        <label>Medida real (m)<input id="impMedida" placeholder="altura=6.2"></label>
+      </div>
+      <div class="grade">
+        <label>Eixo para cima<select id="impVertical"><option>auto</option><option>z</option><option>y</option><option>x</option><option>-y</option><option>-z</option></select></label>
+        <label>Arquivo<input type="file" id="impArquivo" accept=".stl,.obj,.ply"></label>
+      </div>
+      <button class="b" id="impEnviar">Importar para a biblioteca</button>
+      <h2>Criar a partir de fotos</h2>
+      <p class="dica">40 a 150 fotos dando a volta no objeto, em 2–3 alturas, luz uniforme. Meça uma dimensão com a trena.
+        Usa o Meshroom (gratuito) na sua placa NVIDIA.</p>
+      <div class="grade">
+        <label>Nome<input id="fotNome" placeholder="exaustor_50"></label>
+        <label>Medida real (m)<input id="fotMedida" placeholder="largura=1.38"></label>
+      </div>
+      <label>Fotos<input type="file" id="fotArquivos" accept="image/*" multiple></label>
+      <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="fotRapido" style="width:auto"> Modo rápido (sem placa NVIDIA)</label>
+      <button class="b" id="fotEnviar">Enviar fotos e gerar 3D</button>
+      <progress id="fotProgresso" value="0" max="1" style="display:none"></progress>
+    </section>
+
+    <section class="aba" id="aba-modelos">
+      <h2>Modelos de exaustor</h2>
+      <div class="acoes">
+        <select id="selModelo" style="flex:1"></select>
+        <button class="b" id="novoModelo">Novo</button>
+        <button class="b" id="dupModelo">Duplicar</button>
+      </div>
+      <div id="formModelo"></div>
+      <canvas id="graficoCurva" width="360" height="190" style="width:100%;border:1px solid var(--borda);border-radius:6px"></canvas>
+      <pre id="fichaModelo"></pre>
+    </section>
+
+    <section class="aba" id="aba-galpao"><div id="formGalpao"></div></section>
+
+    <section class="aba" id="aba-simular">
+      <h2>Rodar simulação</h2>
+      <div class="grade3">
+        <label>Célula (m)<input id="simCelula" type="number" step="0.05"></label>
+        <label>Iterações<input id="simIter" type="number" step="100"></label>
+        <label>Núcleos CPU<input id="simNucleos" type="number" step="1"></label>
+      </div>
+      <p class="dica">0,4 m = teste em minutos · 0,25 m = padrão · 0,15 m = fino (horas).</p>
+      <div class="acoes">
+        <button class="b" id="salvar">Salvar projeto</button>
+        <button class="b p" id="simular">Salvar e simular</button>
+      </div>
+      <progress id="simProgresso" value="0" max="1" style="display:none"></progress>
+      <div id="simEstado" class="dica"></div>
+      <pre id="simLog" style="display:none"></pre>
+      <div id="resultados"></div>
+    </section>
+  </aside>
+</div>
+<div id="aviso"></div>
+<script type="module" src="/web/app.js"></script>
+</body>
+</html>

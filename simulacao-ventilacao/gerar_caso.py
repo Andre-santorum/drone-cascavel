@@ -22,6 +22,9 @@ import os
 import shutil
 import stat
 
+import exaustor as modelo_exaustor
+import geometria
+
 CABECALHO = """/*--------------------------------*- C++ -*----------------------------------*\\
   Gerado por gerar_caso.py (simulacao-ventilacao) - OpenFOAM 12
 \\*---------------------------------------------------------------------------*/
@@ -77,7 +80,27 @@ def limites_stl(caminho):
 
 
 def posicionar_exaustores(cfg):
-    """Retorna lista de exaustores: dict(nome, parede, centro_ao_longo, z, lado)."""
+    """Lista de exaustores: dict(nome, parede, centro, z, lado, modelo, exaustor).
+
+    'exaustor' e o objeto que da a vazao em funcao da pressao: o modelo calculado a partir de
+    motor/polias/helice (modelos_exaustor) ou, sem modelo, a vazao fixa vazao_m3h_cada.
+    """
+    lista = _posicoes(cfg)
+    modelos = modelo_exaustor.modelos(cfg)
+    padrao = cfg["exaustores"].get("modelo")
+    for e in lista:
+        e["modelo"] = e.get("modelo") or padrao
+        if e["modelo"]:
+            if e["modelo"] not in modelos:
+                raise SystemExit(f"modelo de exaustor '{e['modelo']}' nao existe em modelos_exaustor")
+            e["exaustor"] = modelos[e["modelo"]]
+            e["lado"] = e["exaustor"].moldura
+        else:
+            e["exaustor"] = modelo_exaustor.VazaoFixa(cfg["exaustores"]["vazao_m3h_cada"], e["lado"])
+    return lista
+
+
+def _posicoes(cfg):
     g = cfg["galpao"]
     ex = cfg["exaustores"]
     lado = ex["lado_m"]
@@ -85,7 +108,7 @@ def posicionar_exaustores(cfg):
     if ex.get("posicoes_manuais"):
         return [
             {"nome": f"exaustor_{i + 1:02d}", "parede": p["parede"], "centro": p["posicao"],
-             "z": p.get("altura", z), "lado": lado}
+             "z": p.get("altura", z), "lado": lado, "modelo": p.get("modelo")}
             for i, p in enumerate(ex["posicoes_manuais"])
         ]
 
@@ -183,8 +206,9 @@ boundary
 
 def snappy(caso, cfg, dx):
     stls = cfg.get("obstaculos_stl") or []
+    itens = cfg.get("itens") or []
     envoltoria = cfg.get("envoltoria_stl")
-    if not stls and not envoltoria:
+    if not stls and not envoltoria and not itens:
         return False
     os.makedirs(os.path.join(caso, "constant/geometry"), exist_ok=True)
     geom, refin = [], []
@@ -195,6 +219,14 @@ def snappy(caso, cfg, dx):
     for i, origem in enumerate(stls):
         nome = f"obstaculo_{i + 1:02d}"
         shutil.copy(origem, os.path.join(caso, "constant/geometry", nome + ".stl"))
+        geom.append(f"    {nome} {{ type triSurfaceMesh; file \"{nome}.stl\"; }}")
+        refin.append(f"        {nome} {{ level (1 1); patchInfo {{ type wall; }} }}")
+    for i, item in enumerate(itens):
+        # itens da biblioteca, ja posicionados/girados/escalados como no editor
+        nome = f"item_{i + 1:02d}"
+        tris = geometria.transformar(geometria.ler_malha(item["arquivo"]), item.get("posicao", (0, 0, 0)),
+                                     item.get("rotacao_graus", (0, 0, 0)), item.get("escala", 1.0))
+        geometria.escrever_stl(os.path.join(caso, "constant/geometry", nome + ".stl"), tris, nome)
         geom.append(f"    {nome} {{ type triSurfaceMesh; file \"{nome}.stl\"; }}")
         refin.append(f"        {nome} {{ level (1 1); patchInfo {{ type wall; }} }}")
     g = cfg["galpao"]
@@ -278,10 +310,10 @@ def topo_set_e_patches(caso, cfg, dx):
              "pointSync false;\n\npatches\n(\n" + "\n".join(patches) + "\n);")
 
 
-def campos(caso, cfg):
+def campos(caso, cfg, vazoes):
+    """vazoes: {nome_do_patch: m3/s} de cada exaustor."""
     t_in = cfg["clima"]["temperatura_entrada_C"] + 273.15
     t_0 = cfg["clima"].get("temperatura_inicial_C", cfg["clima"]["temperatura_entrada_C"]) + 273.15
-    q_fan = cfg["exaustores"]["vazao_m3h_cada"] / 3600.0
     parede = "wall"
     exaust = '"exaustor_.*"'
     entrada = '"entrada_.*"'
@@ -293,7 +325,10 @@ def campos(caso, cfg):
 
     escrever(caso, "0/U", "volVectorField", "dimensions [0 1 -1 0 0 0 0];\ninternalField uniform (0 0 0);\n" + bf([
         (parede, ["type noSlip;"]),
-        (exaust, ["type flowRateOutletVelocity;", f"volumetricFlowRate {q_fan:.6g};", "value uniform (0 0 0);"]),
+    ] + [
+        (nome, ["type flowRateOutletVelocity;", f"volumetricFlowRate {q:.6g};", "value uniform (0 0 0);"])
+        for nome, q in vazoes.items()
+    ] + [
         (entrada, ["type pressureInletOutletVelocity;", "value uniform (0 0 0);"]),
     ]))
     escrever(caso, "0/p_rgh", "volScalarField", "dimensions [1 -1 -2 0 0 0 0];\ninternalField uniform 0;\n" + bf([
@@ -574,6 +609,8 @@ def main():
     cfg["obstaculos_stl"] = [os.path.join(base, p) for p in cfg.get("obstaculos_stl", [])]
     if cfg.get("envoltoria_stl"):
         cfg["envoltoria_stl"] = os.path.join(base, cfg["envoltoria_stl"])
+    for item in cfg.get("itens", []):
+        item["arquivo"] = os.path.join(base, item["arquivo"])
     if args.exaustores:
         cfg["exaustores"]["quantidade"] = args.exaustores
         cfg["exaustores"]["posicoes_manuais"] = []
@@ -586,20 +623,35 @@ def main():
         cfg["solver"]["nucleos_cpu"] = args.nucleos
 
     dx = cfg["malha"]["tamanho_celula"]
+    dx_max = cfg["galpao"]["altura"] / 8
+    if (cfg.get("envoltoria_stl") or cfg.get("itens") or cfg.get("obstaculos_stl")) and dx > dx_max:
+        # com o modelo 3D, menos de 8 celulas na altura deixa a malha ruim e o calculo diverge
+        print(f"AVISO: celula {dx} m e grossa demais para o pe-direito de {cfg['galpao']['altura']} m; "
+              f"usando {dx_max:.2f} m.")
+        dx = cfg["malha"]["tamanho_celula"] = round(dx_max, 2)
     caso = args.saida or os.path.join("casos", cfg["nome"])
     if os.path.exists(caso):
         shutil.rmtree(caso)
     os.makedirs(caso)
 
-    lado = cfg["exaustores"]["lado_m"]
+    lista = posicionar_exaustores(cfg)
+    lado = min(e["lado"] for e in lista)
     if lado / dx < 3:
         print(f"AVISO: exaustor de {lado} m com celula de {dx} m fica com menos de 3 celulas "
               f"de lado; use celula <= {lado / 3:.2f} m para resultados confiaveis.")
+    # ponto de operacao: pressao em que a vazao dos exaustores passa pelos pads/entradas
+    p_op, qs = modelo_exaustor.resolver(cfg, [e["exaustor"] for e in lista])
+    vazoes = {e["nome"]: q for e, q in zip(lista, qs)}
+    cfg["operacao"] = {"pressao_estatica_Pa": round(p_op, 1),
+                       "vazao_total_m3h": round(sum(qs) * 3600),
+                       "exaustores": [{"nome": e["nome"], "modelo": e["modelo"], "parede": e["parede"],
+                                       "centro": e["centro"], "altura": e["z"], "lado": e["lado"],
+                                       "vazao_m3h": round(q * 3600)} for e, q in zip(lista, qs)]}
 
     n_cel = block_mesh(caso, cfg, dx)
     tem_stl = snappy(caso, cfg, dx)
     topo_set_e_patches(caso, cfg, dx)
-    campos(caso, cfg)
+    campos(caso, cfg, vazoes)
     constantes(caso, cfg)
     sistema(caso, cfg, dx)
     allrun(caso, cfg, tem_stl)
@@ -609,8 +661,10 @@ def main():
     ram_gb = n_cel * 1.2e-6 * (1.3 if tem_stl else 1.0)
     print(f"Caso criado em: {caso}")
     print(f"Celulas: ~{n_cel / 1e6:.2f} milhoes  ->  RAM estimada ~{ram_gb:.1f} GB")
-    for e in posicionar_exaustores(cfg):
-        print(f"  {e['nome']}: parede {e['parede']}, centro {e['centro']:.2f} m, altura {e['z']:.2f} m")
+    print(f"Pressao estatica de operacao: {p_op:.1f} Pa  |  vazao total {sum(qs) * 3600:,.0f} m3/h")
+    for e, q in zip(lista, qs):
+        print(f"  {e['nome']}: parede {e['parede']}, centro {e['centro']:.2f} m, altura {e['z']:.2f} m, "
+              f"{q * 3600:,.0f} m3/h" + (f" (modelo {e['modelo']})" if e["modelo"] else ""))
     print(f"Para rodar: cd {caso} && ./Allrun")
 
 
