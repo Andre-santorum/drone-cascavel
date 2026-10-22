@@ -18,7 +18,6 @@ Depois:  cd casos/<nome> && ./Allrun
 import argparse
 import copy
 import json
-import math
 import os
 import shutil
 import stat
@@ -251,7 +250,6 @@ meshQualityControls
     #includeEtc "caseDicts/mesh/generation/meshQualityDict"
 }}
 
-writeFlags (scalarLevels);
 mergeTolerance 1e-6;
 """)
     return True
@@ -532,21 +530,23 @@ relaxationFactors
 
 def allrun(caso, cfg, tem_stl):
     n = cfg["solver"]["nucleos_cpu"]
-    mesh_stl = "runApplication snappyHexMesh -overwrite\n" if tem_stl else ""
+    mesh_stl = "runApplication snappyHexMesh -overwrite || falhou snappyHexMesh\n" if tem_stl else ""
     if n > 1:
-        rodar = ("runApplication decomposePar -force\n"
-                 f"runParallel foamRun\n"
-                 "runApplication reconstructPar -latestTime\n")
+        rodar = ("runApplication decomposePar -force || falhou decomposePar\n"
+                 "runParallel foamRun || falhou foamRun\n"
+                 "runApplication reconstructPar -latestTime || falhou reconstructPar\n")
     else:
-        rodar = "runApplication foamRun\n"
+        rodar = "runApplication foamRun || falhou foamRun\n"
     texto = f"""#!/bin/sh
 cd "${{0%/*}}" || exit 1
 . $WM_PROJECT_DIR/bin/tools/RunFunctions
 
-runApplication blockMesh
-{mesh_stl}runApplication topoSet
-runApplication createPatch -overwrite
-runApplication checkMesh
+falhou() {{ echo "ERRO em $1 - veja o arquivo log.$1 nesta pasta"; exit 1; }}
+
+runApplication blockMesh || falhou blockMesh
+{mesh_stl}runApplication topoSet || falhou topoSet
+runApplication createPatch -overwrite || falhou createPatch
+runApplication checkMesh || falhou checkMesh
 {rodar}
 touch caso.foam
 python3 "{os.path.abspath(os.path.join(os.path.dirname(__file__), 'pos_processar.py'))}" .

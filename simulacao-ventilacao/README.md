@@ -123,6 +123,53 @@ use `"posicoes_manuais"`:
 
 ---
 
+## 3A. Projetos do DJI Terra (o jeito mais fácil)
+
+Se o barracão foi levantado com drone e processado no **DJI Terra**, um único comando faz
+tudo: lê o modelo 3D, acha o barracão, mede comprimento, largura, altura do beiral e o
+formato do telhado, gera a malha, roda a simulação e faz o relatório.
+
+**No DJI Terra**, na reconstrução 3D, marque nos formatos de saída **OBJ** (ou PLY). Se for
+nuvem de pontos (LiDAR/L1/L2), use **LAS**. Os formatos B3DM/OSGB/S3MB não servem, porque são só
+para visualização. O Terra grava em
+`<pasta de missões>\<usuário>\<missão>\models\pc\0\terra_obj\` (a pasta de missões aparece
+nas Configurações do Terra).
+
+**No Ubuntu (WSL)** — o disco C: do Windows aparece como `/mnt/c`:
+
+```bash
+cd ~/drone-cascavel/simulacao-ventilacao
+./simular_terra.sh "/mnt/c/Users/<voce>/Documents/DJI/DJI Terra/<conta>/<missao>"
+```
+
+Pode passar a pasta da missão inteira; o programa encontra os arquivos sozinho. Depois confira
+as duas figuras que ele cria em `modelos/<missao>/`:
+
+- `visao_geral.png` – mapa de alturas com as construções numeradas. Se o terreno tiver mais
+  de um barracão, a maior é a nº 1; para usar outra, acrescente `--galpao 2`. As pontas
+  **A** e **B** do barracão estão marcadas: os exaustores ficam na **B**. Se estiverem do
+  outro lado, use `--exaustores-em inicio`;
+- `perfil_telhado.png` – corte transversal com os pontos do drone e a forma adotada.
+
+Ajustes comuns:
+
+| Situação | Opção |
+|---|---|
+| O drone vê o telhado, que é maior que as paredes por causa do **beiral** | `--beiral 0.6` (desconta 0,6 m de cada lado) |
+| Galpão com **forro** (o ar só circula abaixo dele) | `--altura-forro 2.8` |
+| Testar outra quantidade de exaustores | `EXAUSTORES=10 ./simular_terra.sh ...` |
+| Teste rápido | `CELULA=0.5 ./simular_terra.sh ...` |
+
+Exaustores, pads, clima e calor vêm do `config_exemplo.json`. Edite esse arquivo antes, ou
+edite `modelos/<missao>/config.json` depois e rode só `python3 gerar_caso.py
+modelos/<missao>/config.json`.
+
+**Sempre confira com a trena** o comprimento, a largura e o pé-direito que o programa
+imprime. No teste com um barracão de 125 × 14 m (beiral 3,0 m, cumeeira 4,5 m), ele mediu
+124,8 × 13,8 m, beiral 3,1 m e cumeeira 4,4 m.
+
+---
+
 ## 4. Usando o seu modelo 3D
 
 Sistema de coordenadas usado (o mesmo que o modelo precisa ter):
@@ -205,6 +252,8 @@ primeiro suspeito é a vazão real dos exaustores.
 
 | Arquivo | Função |
 |---|---|
+| `simular_terra.sh` | um comando: importa do DJI Terra, gera, roda e faz o relatório |
+| `importar_terra.py` | lê OBJ/PLY/LAS do DJI Terra, acha e mede o barracão, gera `galpao.stl` + `config.json` |
 | `calculo_rapido.py` | conta analítica: velocidade média, troca de ar, ΔT, velocidade no pad |
 | `gerar_caso.py` | gera o caso OpenFOAM a partir do JSON |
 | `pos_processar.py` | gera relatório e mapas (chamado automaticamente pelo `Allrun`) |
@@ -223,5 +272,8 @@ Testado com OpenFOAM 12 no Ubuntu 24.04 (o mesmo que você vai instalar):
 - mesmo galpão com a malha padrão (0,25 m, 340 mil células): **12 minutos** em 4 núcleos;
   velocidade média a 0,3 m do piso 1,87 m/s (conta analítica: 1,85 m/s), saída a 27,43 °C.
   Relatório e mapas desse caso estão em [`exemplo_resultados/`](exemplo_resultados/relatorio.md);
+- projeto simulado do DJI Terra (terreno inclinado, barracão girado 35° em coordenadas UTM,
+  outro galpão e árvores ao redor), em OBJ, PLY e LAS: barracão certo encontrado e medido,
+  simulação completa rodou com erro de massa de 0,00 %;
 - 12 exaustores (8 no fundo + 4 nas laterais), obstáculos STL (linhas de comedouro) e
   envoltória STL com telhado em duas águas: malha gerada com "Mesh OK" e cálculo estável.
